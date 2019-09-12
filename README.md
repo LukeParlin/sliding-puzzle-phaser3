@@ -1,9 +1,10 @@
-# Phaser 3 Webpack Project Template
+# Sliding Puzzle Phaser 3
 
-A Phaser 3 project template with ES6 support via [Babel 7](https://babeljs.io/) and [Webpack 4](https://webpack.js.org/)
-that includes hot-reloading for development and production-ready builds.
+A simple sliding puzzle created in a few days to learn Phaser 3.
 
-Loading images via JavaScript module `import` is also supported.
+Original project template cloned from [photonstorm's](https://github.com/photonstorm) [phaser3-project-template](https://github.com/photonstorm/phaser3-project-template).
+
+ES6 support via [Babel 7](https://babeljs.io/) and [Webpack 4](https://webpack.js.org/) that includes hot-reloading for development and production-ready builds. Loading images via JavaScript module `import` is also supported.
 
 ## Requirements
 
