@@ -1,8 +1,17 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-  </head>
-  <body>
-  </body>
+
+<head>
+   <meta charset="utf-8">
+</head>
+
+<body>
+   <script type="text/javascript">
+      //Check to see if a grid size is specified in the URL parameters — unnecessary, but nifty!
+      var parsedUrl = new URL(window.location.href);
+      var urlGridSize = parsedUrl.searchParams.get("grid");
+      var gridSize = Number(urlGridSize);
+   </script>
+</body>
+
 </html>

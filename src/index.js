@@ -1,45 +1,74 @@
+/**
+ * A simple sliding puzzle game built to test Phaser 3
+ * @author Luke Parlin <luke.parlin@linguaphonegroup.com>
+ */
+
 import Phaser from "phaser";
-//Config for a single-scene Phaser 3 game instance
+
+//Config for a single-scene, responsive Phaser 3 game instance
 var config = {
+   title: 'Pingu Sliding Puzzle',
    type: Phaser.AUTO,
-   width: 500,
-   height: 500,
+   width: 1024,
+   height: 1024,
    scene: {
+      init: init,
       preload: preload,
       create: create,
       update: update
-   }
+   },
+   scale: {  //the scale configuration can make a canvas responsive, though you don't need to include one
+      mode: Phaser.Scale.FIT, //Scale.FIT adjusts the canvas to fit inside it's parent while maintaining its aspect ratio
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+   },
 };
 
-//Create the Phaser 3 game instance
-var game = new Phaser.Game(config);
+/** @global */
+var game = new Phaser.Game(config); //Create the Phaser 3 game instance
 
-var gridSize = 3;           //the number of rows and columns in our puzzle
+//check to make sure gridSize exists, and that it's valid
+if (!gridSize || gridSize < 3) {
+   /** @global */
+   gridSize = 4;          //the number of rows and columns in our puzzle (this global should be set in the HTML, but in case it's not...)
+}
+
+/** @global */
 var grid = [];              //an array which holds the rows of tiles in our puzzle
 
+/** @global */
 var tileWidth, halfWidth;   //the width of each tile in pixels (and half that, since the origin of each tile is the centerpoint)
+
+/**
+* @function     init
+* @description  main scene's init function, called before the scene's assets are preloaded. the engine update loop is NOT running during init.
+*/
+function init() {
+}
 
 /**
 * @function     preload
 * @description  main scene's preload function, called before the scene is created
 */
 function preload() {
-   //load in the complete puzzle image, background music, and tile slide sound
-   this.load.image('puzzle-bg', 'assets/pingu-puzzle.png');
-   this.load.audio('snowfall-bgm', 'assets/snowfall.mp3');
-   this.load.audio('slide-snd', 'assets/dragslide.mp3');
+   //load in the complete puzzle image and win icon
+   this.load.image('puzzle-bg', '/assets/pingu-puzzle.png');
+   this.load.image('win-img', '/assets/icon.png');
+
+   //load in the slide sound effect, the background music, and the win sound
+   this.load.audio('snowfall-bgm', '/assets/snowfall.mp3');
+   this.load.audio('slide-snd', '/assets/dragslide.mp3');
+   this.load.audio('noot-snd', '/assets/noot.mp3')
 }
 
 /**
 * @function     create
-* @description  main scene's initialisation function, called before the first frame
+* @description  main scene's initialisation function, called before the first frame every time the scene is started
 */
 function create() {
    //calculate the width of a puzzle tile based on the size of the puzzle image, the canvas, and the grid
    let puzzleTex = this.textures.get('puzzle-bg');
    let puzzleScale = game.canvas.width / puzzleTex.source[0].width;
    let frameWidth = puzzleTex.source[0].width / gridSize;
-   console.log(puzzleScale);
 
    tileWidth = game.canvas.width / gridSize;
    halfWidth = tileWidth * 0.5;
@@ -48,26 +77,30 @@ function create() {
    //this could have be done automatically by loading the image as a spritesheet, but doing it manually allows us to accept different sized images
    for (let i = 0; i < gridSize; ++i) {
       for (let j = 0; j < gridSize; ++j) {
+         //calling "add" on a texture adds frames to that texture
          //args: frame ID, texture source index, frame x pos, frame y pos, frame width, frame height
          puzzleTex.add(i * gridSize + j, 0, j * frameWidth, i * frameWidth, frameWidth, frameWidth);
       }
    }
 
    //store a list of shuffled tile numbers
-   var tiles = shuffleGrid();
+   var tileFrames = shuffleGrid();
 
-   //create the puzzle tile game objects
+   //create the puzzle tiles — each tile has an image game object, and a row and column
    for (let i = 0; i < gridSize; ++i) {
       let row = [];
       for (let j = 0; j < gridSize; ++j) {
          if (i > 0 || j < gridSize - 1) { //leave a blank space in the top-right of the grid
-            let tile = this.add.image(j * tileWidth + halfWidth, i * tileWidth + halfWidth, 'puzzle-bg');
-            tile.setFrame(tiles.pop()); //set the tile to the next frame in the list
+            //calling "add.<type>" in a scene adds a game object of that type to the scene
+            //args: x position, y position, texture key, and the frame we want the image to display
+            let tile = this.add.image(j * tileWidth + halfWidth, i * tileWidth + halfWidth, 'puzzle-bg', tileFrames.pop());
+            tile.row = i;
+            tile.col = j;
+
+            //scale the image and tell it to receive input events
             tile.setScale(puzzleScale);
             tile.setInteractive();
 
-            tile.row = i;
-            tile.col = j;
             row.push(tile);
          } else {
             row.push(null);
@@ -77,7 +110,8 @@ function create() {
    }
 
    //play the background music, and begin listening for clicks/taps on game objects
-   this.sound.play('snowfall-bgm', { volume: 0.3, loop: true });
+   this.bgm = this.sound.add('snowfall-bgm', { volume: 0.3, loop: true });
+   this.bgm.play();
    this.input.on('gameobjectdown', tileClicked);
 }
 
@@ -130,10 +164,12 @@ function slideTile(tile, newRow, newCol) {
    //tween the tile into the blank space
    tile.scene.tweens.add({
       targets: tile,
-      duration: 500,
+      duration: 600,
       ease: 'Cubic.easeInOut',
       x: newCol * tileWidth + halfWidth,
-      y: newRow * tileWidth + halfWidth
+      y: newRow * tileWidth + halfWidth,
+      onComplete: checkWin, //when the tween completes, check to see if the player has won
+      onCompleteScope: tile.scene //allows me to access the current scene from 'this' in the onComplete function
    });
 
    //swap the tile into the blank grid space, and update its row/column
@@ -145,6 +181,28 @@ function slideTile(tile, newRow, newCol) {
    //play the tile slide sound
    tile.scene.sound.play('slide-snd');
 }
+
+/**
+* @function     checkWin
+* @description  checks to see if the game has been won (and ends the game if so)
+*/
+function checkWin() {
+   //starting from the top-left of the grid...
+   for (let i = 0; i < gridSize; ++i) {
+      for (let j = 0; j < gridSize; ++j) {
+         //...if we're not on the empty space, and the tile isn't displaying the expected frame, stop checking
+         if (grid[i][j] != null && grid[i][j].frame.name != gridSize * i + j) {
+            return;
+         }
+      }
+
+      this.input.off('gameobjectdown');
+      this.sound.play('noot-snd', { volume: 0.5 });
+      this.bgm.stop();
+   }
+
+}
+
 
 /**
 * @function     shuffleGrid
@@ -180,3 +238,31 @@ function shuffleGrid() {
 
    return tileNumbers;
 }
+
+//---------------------------------------------------------------------------------//
+//         IT'S POSSIBLE TO EXTEND PHASER 3 BY ADDING CUSTOM GAME OBJECTS          //
+// whether or not this is "best" practice is debatable, as JavaScript has no types //
+//---------------------------------------------------------------------------------//
+
+// HERE'S A CUSTOM GAME OBJECT
+// class PuzzleTile extends Phaser.GameObjects.Image {
+//    constructor(scene, row, col, texture, frame = 0) {
+//       super(scene, col * tileWidth + halfWidth, row * tileWidth + halfWidth, texture, frame);
+//       this.row = row;
+//       this.col = col;
+//    }
+// }
+
+// YOU CAN ADD IT TO THE GAME OBJECT FACTORY AS NEW TYPE
+// function init() {
+//    Phaser.GameObjects.GameObjectFactory.register('puzzleTile', function (row, col, texture, frame = 0) {
+//       let tile = new PuzzleTile(this.scene, row, col, texture, frame);
+
+//       this.displayList.add(tile);
+
+//       return tile;
+//    });
+// }
+
+// FROM THAT POINT YOU COULD ADD IT TO A SCENE EASILY. Note that it's built using a row and column, rather than an x and y position
+// let tile = this.add.puzzleTile(i, j, 'puzzle-bg');
