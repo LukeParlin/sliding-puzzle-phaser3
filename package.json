@@ -11,7 +11,7 @@
     "type": "git",
     "url": "git+https://github.com/LukeParlin/sliding-puzzle-phaser3.git"
   },
-  "author": "Luke Parlin (http://www.lukeparlin.com)",
+  "author": "Luke Parlin <luke.parlin@linguaphonegroup.com> (http://www.lukeparlin.com)",
   "license": "MIT",
   "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
   "bugs": {
