@@ -50,14 +50,43 @@ function init() {
 * @description  main scene's preload function, called before the scene is created
 */
 function preload() {
+   //set up a small pre-loader progress bar using Phaser's built-in loader plugin
+   var progress = this.add.graphics();
+
+   this.load.on('progress', function (percent) {
+      //Style our loading bar outline and fill
+      let lineWidth = 4;
+      let lineColor = 0x009FDA;
+      let barColor = 0xffffff;
+
+      progress.clear();
+      progress.lineStyle(lineWidth, lineColor) //Pingu's English blue!
+      progress.fillStyle(barColor);
+
+      //Set up the dimensions of our bar (this could be loaded from json or something)
+      let barWidth = 500;
+      let barHeight = 25;
+      let barMargin = 2;
+      let barX = (game.canvas.width - barWidth) * 0.5;
+      let barY = (game.canvas.height - barHeight) * 0.5;
+
+      //Draw the outline for our loading bar and fill it in
+      progress.strokeRect(barX, barY, barWidth, barHeight);
+      progress.fillRect(barX + barMargin + lineWidth * 0.5, barY + barMargin + lineWidth * 0.5, percent * (barWidth - lineWidth - barMargin * 2), barHeight - lineWidth - barMargin * 2);
+   });
+
+   this.load.on('complete', function () {
+      progress.destroy();
+   });
+
    //load in the complete puzzle image and win icon
-   this.load.image('puzzle-bg', '/assets/pingu-puzzle.png');
-   this.load.image('win-img', '/assets/icon.png');
+   this.load.image('puzzle-bg', 'assets/pingu-puzzle.png');
+   this.load.image('win-img', 'assets/icon.png');
 
    //load in the slide sound effect, the background music, and the win sound
-   this.load.audio('snowfall-bgm', '/assets/snowfall.mp3');
-   this.load.audio('slide-snd', '/assets/dragslide.mp3');
-   this.load.audio('noot-snd', '/assets/noot.mp3')
+   this.load.audio('snowfall-bgm', 'assets/snowfall.mp3');
+   this.load.audio('slide-snd', 'assets/dragslide.mp3');
+   this.load.audio('noot-snd', 'assets/noot.mp3')
 }
 
 /**
@@ -108,9 +137,11 @@ function create() {
       }
       grid.push(row);
    }
+   //store references to the background music and noot sounds in the scene
+   this.bgm = this.sound.add('snowfall-bgm', { volume: 0.3, loop: true });
+   this.noot = this.sound.add('noot-snd', { volume: 0.5 });
 
    //play the background music, and begin listening for clicks/taps on game objects
-   this.bgm = this.sound.add('snowfall-bgm', { volume: 0.3, loop: true });
    this.bgm.play();
    this.input.on('gameobjectdown', tileClicked);
 }
@@ -196,9 +227,12 @@ function checkWin() {
          }
       }
 
+      //if we've made it this far the game has been won!
       this.input.off('gameobjectdown');
-      this.sound.play('noot-snd', { volume: 0.5 });
       this.bgm.stop();
+      if( !this.noot.isPlaying ){
+         this.noot.play();
+      }
    }
 
 }
