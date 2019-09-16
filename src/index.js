@@ -12,7 +12,7 @@ var config = {
    width: 1024,
    height: 1024,
    scene: {
-      init: init,
+      init: init, //Phaser 3 scenes will call these 4 built-in "lifecycle" functions if the developer has defined them
       preload: preload,
       create: create,
       update: update
