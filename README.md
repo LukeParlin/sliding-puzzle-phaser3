@@ -8,7 +8,7 @@ ES6 support via [Babel 7](https://babeljs.io/) and [Webpack 4](https://webpack.j
 
 ## Requirements
 
-[Node.js](https://nodejs.org) is required to install dependencies and run scripts via `npm`.
+[Node.js](https://nodejs.org) is required to install dependencies and run scripts via `npm`. The project has [Visual Studio Code](https://code.visualstudio.com/) configurations. Opening the workspace in VSCode will prompt you to install a number of recommended extensions.
 
 ## Available Commands
 
