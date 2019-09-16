@@ -79,9 +79,8 @@ function preload() {
       progress.destroy();
    });
 
-   //load in the complete puzzle image and win icon
+   //load in the complete puzzle image
    this.load.image('puzzle-bg', 'assets/pingu-puzzle.png');
-   this.load.image('win-img', 'assets/icon.png');
 
    //load in the slide sound effect, the background music, and the win sound
    this.load.audio('snowfall-bgm', 'assets/snowfall.mp3');
