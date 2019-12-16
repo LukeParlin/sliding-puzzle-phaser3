@@ -2,7 +2,7 @@
 Thumbs.db
 .DS_Store
 .idea
-.code-workspace
+*.code-workspace
 
 # Vendors
 node_modules/
